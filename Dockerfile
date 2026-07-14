@@ -1,15 +1,17 @@
-# 1. Tomcat 9 आणि Java 11 ची बेस इमेज वापरूया
-FROM tomcat:9.0-jdk11-openjdk-slim
+FROM maven:3.9.9-eclipse-temurin-8 AS builder
 
-# 2. Tomcat मधील जुने डिफॉल्ट ॲप्स डिलीट करूया (सुरक्षेसाठी आणि क्लीनअपसाठी)
+WORKDIR /app
+
+COPY . .
+
+RUN mvn clean package -DskipTests
+
+FROM tomcat:9.0-jdk8-temurin
+
 RUN rm -rf /usr/local/tomcat/webapps/*
 
-# 3. Maven ने तयार केलेली WAR फाईल Tomcat च्या webapps फोल्डरमध्ये ROOT.war म्हणून कॉपी करूया
-# (लक्षात ठेवा: web/target/ मध्ये तुमच्या प्रोजेक्टची .war फाईल तयार होईल)
-COPY web/target/*.war /usr/local/tomcat/webapps/ROOT.war
+COPY --from=builder /app/web/target/time-tracker-web.war /usr/local/tomcat/webapps/ROOT.war
 
-# 4. कंटेनर 8080 पोर्टवर चालेल
 EXPOSE 8080
 
-# 5. Tomcat सर्व्हर सुरू करण्याची कमांड
-CMD ["catalina.sh", "run"]
+CMD ["catalina.sh","run"]

@@ -1,0 +1,10 @@
+services:
+  timetracker:
+    container_name: timetracker
+
+    build: .
+
+    ports:
+      - "85:8080"
+
+    restart: unless-stopped
