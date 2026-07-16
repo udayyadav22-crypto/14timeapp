@@ -1,4 +1,58 @@
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  imageRepository: time-tracker
+  dockerfilePath: Dockerfile
+  tag: $(Build.BuildId)
+
+stages:
+
+# ============================
+# Build Docker Image
+# ============================
+
+- stage: Build
+  displayName: Build and Push Docker Image
+
+  jobs:
+
+  - job: Build
+
+    steps:
+
+    - checkout: self
+
+    - task: Docker@2
+      displayName: Build Docker Image
+
+      inputs:
+        command: build
+        containerRegistry: docker-acr-sc
+        repository: $(imageRepository)
+        dockerfile: $(dockerfilePath)
+        tags: |
+          $(tag)
+
+    - task: Docker@2
+      displayName: Push Docker Image
+
+      inputs:
+        command: push
+        containerRegistry: docker-acr-sc
+        repository: $(imageRepository)
+        tags: |
+          $(tag)
+
+# ============================
+# Deploy to AKS
+# ============================
+
 - stage: Deploy
+
   displayName: Deploy to AKS
 
   dependsOn: Build
@@ -14,6 +68,7 @@
     - checkout: self
 
     - task: KubernetesManifest@1
+
       displayName: Deploy to AKS
 
       inputs:
