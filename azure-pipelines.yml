@@ -58,35 +58,24 @@ stages:
 
   jobs:
 
-  - deployment: Deploy
+  - job: Deploy
 
     displayName: Deploy Application
 
-    environment: aks
+    steps:
 
-    strategy:
+    - checkout: self
 
-      runOnce:
+    - task: KubernetesManifest@1
+      displayName: Deploy to AKS
 
-        deploy:
+      inputs:
+        action: deploy
+        kubernetesServiceConnection: aks-sc
 
-          steps:
+        manifests: |
+          k8s/deployment.yaml
+          k8s/service.yaml
 
-          - checkout: self
-
-          - task: KubernetesManifest@1
-
-            displayName: Deploy to AKS
-
-            inputs:
-
-              action: deploy
-
-              kubernetesServiceConnection: aks-sc
-
-              manifests: |
-                k8s/deployment.yaml
-                k8s/service.yaml
-
-              containers: |
-                timetrackeracr2026.azurecr.io/time-tracker:$(Build.BuildId)
+        containers: |
+          timetrackeracr2026.azurecr.io/time-tracker:$(Build.BuildId)
