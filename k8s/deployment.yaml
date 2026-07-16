@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: time-tracker
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: time-tracker
+
+  template:
+    metadata:
+      labels:
+        app: time-tracker
+
+    spec:
+      containers:
+      - name: time-tracker
+
+        image: timetrackeracr2026.azurecr.io/time-tracker
+
+        imagePullPolicy: Always
+
+        ports:
+        - containerPort: 8080
