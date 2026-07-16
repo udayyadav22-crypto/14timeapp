@@ -6,20 +6,20 @@ pool:
 
 variables:
   imageRepository: time-tracker
-  dockerRegistry: timetrackeracr2026.azurecr.io
   dockerfilePath: Dockerfile
   tag: $(Build.BuildId)
 
 stages:
 
-# =====================================================
-# Stage 1 - Build Docker Image & Push to ACR
-# =====================================================
+#========================================
+# Build & Push Docker Image
+#========================================
 
 - stage: Build
-  displayName: Build and Push Image
+  displayName: Build and Push Docker Image
 
   jobs:
+
   - job: Build
 
     steps:
@@ -47,9 +47,9 @@ stages:
         tags: |
           $(tag)
 
-# =====================================================
-# Stage 2 - Deploy to AKS
-# =====================================================
+#========================================
+# Deploy to AKS
+#========================================
 
 - stage: Deploy
   displayName: Deploy to AKS
@@ -58,23 +58,35 @@ stages:
 
   jobs:
 
-  - job: Deploy
+  - deployment: Deploy
 
-    steps:
+    displayName: Deploy Application
 
-    - checkout: self
+    environment: aks
 
-    - task: KubernetesManifest@1
-      displayName: Deploy Application
+    strategy:
 
-      inputs:
-        action: deploy
+      runOnce:
 
-        kubernetesServiceConnection: aks-sc
+        deploy:
 
-        manifests: |
-          k8s/deployment.yaml
-          k8s/service.yaml
+          steps:
 
-        containers: |
-          timetrackeracr2026.azurecr.io/time-tracker:$(Build.BuildId)
+          - checkout: self
+
+          - task: KubernetesManifest@1
+
+            displayName: Deploy to AKS
+
+            inputs:
+
+              action: deploy
+
+              kubernetesServiceConnection: aks-sc
+
+              manifests: |
+                k8s/deployment.yaml
+                k8s/service.yaml
+
+              containers: |
+                timetrackeracr2026.azurecr.io/time-tracker:$(Build.BuildId)
