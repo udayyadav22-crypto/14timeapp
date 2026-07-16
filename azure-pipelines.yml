@@ -1,0 +1,54 @@
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  imageRepository: 'time-tracker'
+  containerRegistry: 'docker-14timeapp-sc'
+  imageTag: '$(Build.BuildId)'
+
+steps:
+
+- checkout: self
+
+- task: Maven@4
+  displayName: Build Maven Project
+  inputs:
+    mavenPomFile: 'pom.xml'
+    goals: 'clean package'
+    publishJUnitResults: false
+
+- task: Docker@2
+  displayName: Build Docker Image
+  inputs:
+    command: build
+    repository: $(imageRepository)
+    dockerfile: Dockerfile
+    containerRegistry: $(containerRegistry)
+    tags: |
+      $(imageTag)
+
+- task: Docker@2
+  displayName: Push Docker Image
+  inputs:
+    command: push
+    repository: $(imageRepository)
+    containerRegistry: $(containerRegistry)
+    tags: |
+      $(imageTag)
+
+- task: KubernetesManifest@1
+  displayName: Deploy to AKS
+  inputs:
+    action: deploy
+    connectionType: azureResourceManager
+    azureSubscriptionConnection: '14timeapp-sc'
+    azureResourceGroup: 'timeapp-rg'
+    kubernetesCluster: 'timeapp-aks'
+    manifests: |
+      k8s/deployment.yaml
+      k8s/service.yaml
+    containers: |
+      timetrackeracr2026.azurecr.io/time-tracker:$(imageTag)
