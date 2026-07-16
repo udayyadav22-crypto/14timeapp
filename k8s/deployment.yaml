@@ -20,7 +20,7 @@ spec:
       containers:
       - name: time-tracker
 
-        image: timetrackeracr2026.azurecr.io/time-tracker
+        image: time-tracker
 
         imagePullPolicy: Always
 
